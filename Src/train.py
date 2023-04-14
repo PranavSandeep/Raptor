@@ -16,6 +16,7 @@ test_df = pd.read_csv('Datasets/test.csv')
 valid_df = pd.read_csv('Datasets/valid.csv')
 
 # Combine train, test, and valid data for text and intent
+
 all_text = train_df['text'].append(test_df['text']).append(valid_df['text']).str.lower().tolist()
 all_intent = train_df['intent'].append(test_df['intent']).append(valid_df['intent']).tolist()
 
@@ -23,14 +24,16 @@ all_intent = train_df['intent'].append(test_df['intent']).append(valid_df['inten
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(all_text)
 
+
 # Convert text data to sequences of numerical representations
 def text_to_sequences(text):
     try:
         sequences = tokenizer.texts_to_sequences(text)
-    except KeyError as e:
+    except KeyError:
         # Handle unknown words by setting their index to 0 (reserved for padding)
         sequences = [[tokenizer.word_index.get(w, 0) for w in t.split()] for t in text]
     return sequences
+
 
 train_sequences = text_to_sequences(train_df['text'].str.lower().tolist())
 test_sequences = text_to_sequences(test_df['text'].str.lower().tolist())
@@ -69,20 +72,25 @@ model.fit(train_padded_sequences, y_train, validation_data=(valid_padded_sequenc
 loss, accuracy = model.evaluate(test_padded_sequences, y_test, batch_size=64)
 print('Test Loss:', loss)
 print('Test Accuracy:', accuracy)
+
+
 # Use the trained model to predict intents for user input
 
 
-def predict_intent(model, tokenizer, input_text):
-    input_text = input_text.lower() # Convert input text to lowercase
-    input_sequence = tokenizer.texts_to_sequences([input_text]) # Convert input text to numerical representation
-    input_padded_sequence = pad_sequences(input_sequence, maxlen=max_length, padding='post') # Pad input sequence
-    predicted_probs = model.predict(input_padded_sequence)[0] # Predict probabilities for each intent
-    predicted_intent_index = tf.argmax(predicted_probs).numpy() # Get index of predicted intent with highest probability
-    predicted_intent = list(intent_mapping.keys())[list(intent_mapping.values()).index(predicted_intent_index)] # Get the corresponding intent label
+def predict_intent(model_, tokenizer_, input_text):
+    input_text = input_text.lower()  # Convert input text to lowercase
+    input_sequence = tokenizer_.texts_to_sequences([input_text])  # Convert input text to numerical representation
+    input_padded_sequence = pad_sequences(input_sequence, maxlen=max_length, padding='post')  # Pad input sequence
+    predicted_probs = model_.predict(input_padded_sequence)[0]  # Predict probabilities for each intent
+    predicted_intent_index = tf.argmax(
+        predicted_probs).numpy()  # Get index of predicted intent with the highest probability
+    predicted_intent = list(intent_mapping.keys())[
+        list(intent_mapping.values()).index(predicted_intent_index)]  # Get the corresponding intent label
     return predicted_intent
 
 
-intent = predict_intent(model=model, tokenizer=tokenizer, input_text="Will it rain tomorrow in Chennai?")
+intent = predict_intent(model_=model, tokenizer_=tokenizer, input_text="Play Matsuri by Fujii Kaze")
 
 print(intent)
-                                                   
+
+model.save('my_model.h5')

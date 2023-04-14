@@ -5,3 +5,6 @@ Src/vecs.tsv
 Src/meta.tsv
 Src/Testing/train-v2.0.json
 Src/test.py
+Src/my_model.h5
+Src/.gitignore
+Src/__pycache__/
